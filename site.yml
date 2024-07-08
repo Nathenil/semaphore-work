@@ -1,5 +1,5 @@
 ---
-- hosts: local_repo
+- hosts: Local_repo
   become: true
   tasks:
     - name: Print OS info
