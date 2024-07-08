@@ -1,5 +1,5 @@
 ---
-- hosts: Local_repo
+- hosts: exim_svr
   become: true
   tasks:
     - name: Print OS info
