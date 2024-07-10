@@ -4,12 +4,12 @@
   become: yes
   tasks:
     - name: Check if snowagent is installed
-      command: which snowagent
+      command: find / -name snowagent
       register: snowagent_installed
       ignore_errors: yes
 
     - name: Get SnowAgent version
-      command: snowagent -v
+      command: dpkg -l snowagent
       when: snowagent_installed.rc == 0
       register: snowagent_version
 
