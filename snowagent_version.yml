@@ -1,0 +1,24 @@
+---
+- name: Check SnowAgent version on Ubuntu machines
+  hosts: ubuntu
+  become: yes
+  tasks:
+    - name: Check if snowagent is installed
+      command: which snowagent
+      register: snowagent_installed
+      ignore_errors: yes
+
+    - name: Get SnowAgent version
+      command: snowagent -v
+      when: snowagent_installed.rc == 0
+      register: snowagent_version
+
+    - name: Output SnowAgent version
+      debug:
+        msg: "SnowAgent version: {{ snowagent_version.stdout }}"
+      when: snowagent_installed.rc == 0
+
+    - name: Output SnowAgent not installed
+      debug:
+        msg: "SnowAgent is not installed on this machine."
+      when: snowagent_installed.rc != 0
