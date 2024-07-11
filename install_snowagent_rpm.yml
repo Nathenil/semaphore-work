@@ -10,9 +10,7 @@
       register: copy_result
 
     - name: Install SnowAgent
-      yum:
-        name: /tmp/snowagent-7.0.0-x64.rpm
-        command: rpm -i /tmp/snowagent-7.0.0-x64.rpm
+      command: rpm -i /tmp/snowagent-7.0.0-x64.rpm
         state: present
       when: copy_result.changed
 
