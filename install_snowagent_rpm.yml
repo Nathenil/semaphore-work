@@ -1,0 +1,36 @@
+---
+- name: Copy and install SnowAgent on AlmaLinux 8 machines
+  hosts: 10.3.168.22
+  become: yes
+  tasks:
+    - name: Copy SnowAgent installation file to destination
+      copy:
+        src: /home/nathaniela/snowagent-7.0.0-x64.rpm
+        dest: /tmp/snowagent-7.0.0-x64.rpm
+      register: copy_result
+
+    - name: Install SnowAgent
+      yum:
+        name: /tmp/snowagent-7.0.0-x64.rpm
+        state: present
+      when: copy_result.changed
+
+    - name: Check if SnowAgent is installed
+      command: find / -name snowagent
+      register: snowagent_installed
+      ignore_errors: yes
+
+    - name: Get SnowAgent version
+      command: rpm -q snowagent
+      when: snowagent_installed.rc == 0
+      register: snowagent_version
+
+    - name: Output SnowAgent version
+      debug:
+        msg: "SnowAgent version: {{ snowagent_version.stdout }}"
+      when: snowagent_installed.rc == 0
+
+    - name: Output SnowAgent not installed
+      debug:
+        msg: "SnowAgent installation failed or SnowAgent is not installed."
+      when: snowagent_installed.rc != 0
