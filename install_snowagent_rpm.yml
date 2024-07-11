@@ -11,7 +11,7 @@
 
     - name: Install SnowAgent
       command: rpm -i /tmp/snowagent-7.0.0-x64.rpm
-      when: copy_result.changed
+      when: snowagent_installed.rc == 1
 
     - name: Check if SnowAgent is installed
       command: find / -name snowagent
