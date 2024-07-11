@@ -1,6 +1,6 @@
 ---
 - name: Check OS version and manage updates
-  hosts: all
+  hosts: 10.3.168.22
   become: yes
   tasks:
     - name: Gather OS information
