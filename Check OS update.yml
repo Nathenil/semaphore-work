@@ -20,13 +20,13 @@
 
     - name: Check if there are updates pending (for Debian/Ubuntu)
       ansible.builtin.shell: apt-get -s upgrade | grep "upgraded,"
-      when: ansible_facts['ansible_os_family'] == "Debian"
+      when: ansible_facts['ansible_os_family'] == "Ubuntu"
       register: apt_updates_pending
 
     - name: Print pending updates (for Debian/Ubuntu)
       ansible.builtin.debug:
         msg: "Pending updates: {{ apt_updates_pending.stdout }}"
-      when: ansible_facts['ansible_os_family'] == "Debian"
+      when: ansible_facts['ansible_os_family'] == "Ubuntu"
 
     - name: Check if there are updates pending (for RedHat/CentOS)
       ansible.builtin.shell: yum check-update | wc -l
