@@ -31,3 +31,32 @@
       debug:
         msg: "SnowAgent installation failed or SnowAgent is not installed."
       when: snowagent_installed.rc != 0
+tasks:
+    - name: Copy Splunkforwarder installation file to destination
+      copy:
+        src: /home/nathaniela/splunkforwarder-9.2.0.1-d8ae995bf219.x86_64.rpm
+        dest: /tmp/splunkforwarder-9.2.0.1-d8ae995bf219.x86_64.rpm
+      register: copy_result
+
+    - name: Install Splunkforwarder
+      command: rpm -i /tmp/splunkforwarder-9.2.0.1-d8ae995bf219.x86_64.rpm
+
+    - name: Check if Splunkforwarder is installed
+      command: find / -name splunkforwarder
+      register: splunkforwarder_installed
+      ignore_errors: yes
+
+    - name: Get Splunkforwarder version
+      command: rpm -q splunkforwarder
+      when: splunkforwarder_installed.rc == 0
+      register: splunkforwarder_version
+
+    - name: Output Splunkforwarder version
+      debug:
+        msg: "Splunkforwarder version: {{ splunkforwarder_version.stdout }}"
+      when: splunkforwarder_installed.rc == 0
+
+    - name: Output Splunkforwarder not installed
+      debug:
+        msg: "Splunkforwarder installation failed or SnowAgent is not installed."
+      when: splunkforwarder_installed.rc != 0
