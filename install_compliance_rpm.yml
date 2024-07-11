@@ -31,7 +31,7 @@
       debug:
         msg: "SnowAgent installation failed or SnowAgent is not installed."
       when: snowagent_installed.rc != 0
-tasks:
+      
     - name: Copy Splunkforwarder installation file to destination
       copy:
         src: /home/nathaniela/splunkforwarder-9.2.0.1-d8ae995bf219.x86_64.rpm
