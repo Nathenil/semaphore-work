@@ -3,6 +3,14 @@
   hosts: all
   become: yes
   tasks:
+    - name: Run qualys-cloud-agent.sh on AlmaLinux 8
+      ansible.builtin.command: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Run qualys-cloud-agent.sh on Ubuntu 22.04
+      ansible.builtin.command: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh
+      when: ansible_facts['os_family'] == "Debian"
+
     - name: Stop Qualys Cloud Agent on AlmaLinux 8
       ansible.builtin.systemd:
         name: qualys-cloud-agent
