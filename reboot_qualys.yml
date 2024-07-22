@@ -1,0 +1,38 @@
+---
+- name: Manage Qualys Cloud Agent Service
+  hosts: all
+  become: yes
+  tasks:
+    - name: Stop Qualys Cloud Agent on AlmaLinux 8
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: stopped
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Stop Qualys Cloud Agent on Ubuntu 22.04
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: stopped
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure Qualys Cloud Agent is stopped
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: stopped
+
+    - name: Start Qualys Cloud Agent on AlmaLinux 8
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: started
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Start Qualys Cloud Agent on Ubuntu 22.04
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: started
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Ensure Qualys Cloud Agent is started
+      ansible.builtin.systemd:
+        name: qualys-cloud-agent
+        state: started
