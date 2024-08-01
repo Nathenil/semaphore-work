@@ -1,39 +1,32 @@
 ---
-- hosts: all
+- name: Gather specific OS information and save to CSV
+  hosts: all
   become: yes
   gather_facts: no
-  tasks: 
 
-  - name: Filter and return only selected facts
-    ansible.builtin.setup:
-      gather_subset:
-      - 'min'
-      - 'kernel'
-      - 'kernel_version'
-      - 'distribution'
-      - 'distribution_version'
-      - 'hardware'
-      gather_timeout: 30
-    async: 600  # Set timeout to 10 minutes
+  tasks:
+    - name: Gather specific OS information
+      ansible.builtin.setup:
+        gather_subset:
+          - 'min'
+          - 'kernel'
+          - 'kernel_version'
+          - 'distribution'
+          - 'distribution_version'
+          - 'hardware'
+        gather_timeout: 30
+      register: system_info
 
-  - name: Task for linux
-    block:
-    - name: Adding to report...check /tmp/summary.csv on 10.3.39.5 for results!
-      lineinfile:
-        path: /tmp/summary.csv
-        line: "{{ ansible_fqdn }},{{ ansible_kernel }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
+    - name: Create CSV header
+      local_action:
+        module: copy
+        dest: /tmp/os_info.csv
+        content: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture\n"
+      run_once: true
+
+    - name: Append OS information to CSV
+      local_action:
+        module: lineinfile
+        path: /tmp/os_info.csv
+        line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }}"
         create: yes
-      delegate_to: 10.3.39.5
-      async: 600  # Set timeout to 10 minutes
-    when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux'
-
-  - name: Task for Ubuntu
-    block:
-    - name: Adding to report...check /tmp/summary.csv on 10.3.39.5 for results!
-      lineinfile:
-        path: /tmp/summary.csv
-        line: "{{ ansible_fqdn }},{{ ansible_kernel_version }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
-        create: yes
-      delegate_to: 10.3.39.5
-      async: 600  # Set timeout to 10 minutes
-    when: ansible_distribution == 'Ubuntu'
