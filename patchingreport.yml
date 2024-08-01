@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: no
+  gather_facts: no
+  tasks: 
+
+  - name: Filter and return only selected facts
+    ansible.builtin.setup:
+      gather_subset:
+      - 'min'
+      - 'kernel'
+      - 'kernel_version'
+      - 'distribution'
+      - 'distribution_version'
+      - 'hardware'
+      gather_timeout: 30
+    async: 600  # Set timeout to 10 minutes
+
+  - name: Task for linux
+    block:
+    - name: Adding to report...check /tmp/summary.csv on spm5882-aap for results!
+      lineinfile:
+        path: /tmp/summary.csv
+        line: "{{ ansible_fqdn }},{{ ansible_kernel }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
+        create: yes
+      delegate_to: spm5882-aap
+      async: 600  # Set timeout to 10 minutes
+    when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux'
+
+  - name: Task for Ubuntu
+    block:
+    - name: Adding to report...check /tmp/summary.csv on spm5882-aap for results!
+      lineinfile:
+        path: /tmp/summary.csv
+        line: "{{ ansible_fqdn }},{{ ansible_kernel_version }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
+        create: yes
+      delegate_to: spm5882-aap
+      async: 600  # Set timeout to 10 minutes
+    when: ansible_distribution == 'Ubuntu'
