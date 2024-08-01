@@ -14,10 +14,16 @@
           - 'distribution'
           - 'distribution_version'
           - 'hardware'
-          - 'date'
-          - 'uptime'
         gather_timeout: 30
       register: system_info
+
+    - name: Get current date
+      ansible.builtin.command: date
+      register: current_date
+
+    - name: Get system uptime
+      ansible.builtin.command: uptime -p
+      register: system_uptime
 
     - name: Create CSV header
       local_action:
@@ -30,5 +36,5 @@
       local_action:
         module: lineinfile
         path: /tmp/os_info.csv
-        line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }},{{system_info.ansible_facts['ansible_date_time.date'] }},{{system_info.ansible_facts ['ansible_uptime_seconds'] }}"
+        line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }},{{ current_date.stdout }},{{ system_uptime.stdout }}"
         create: yes
