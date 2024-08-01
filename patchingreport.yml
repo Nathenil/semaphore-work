@@ -23,7 +23,7 @@
         path: /tmp/summary.csv
         line: "{{ ansible_fqdn }},{{ ansible_kernel }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
         create: yes
-      delegate_to: spm5882-aap
+      delegate_to: 10.3.39.5
       async: 600  # Set timeout to 10 minutes
     when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'AlmaLinux'
 
@@ -34,6 +34,6 @@
         path: /tmp/summary.csv
         line: "{{ ansible_fqdn }},{{ ansible_kernel_version }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
         create: yes
-      delegate_to: spm5882-aap
+      delegate_to: 10.3.39.5
       async: 600  # Set timeout to 10 minutes
     when: ansible_distribution == 'Ubuntu'
