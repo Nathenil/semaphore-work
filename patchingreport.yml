@@ -18,7 +18,7 @@
 
   - name: Task for linux
     block:
-    - name: Adding to report...check /tmp/summary.csv on spm5882-aap for results!
+    - name: Adding to report...check /tmp/summary.csv on 10.3.39.5 for results!
       lineinfile:
         path: /tmp/summary.csv
         line: "{{ ansible_fqdn }},{{ ansible_kernel }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
@@ -29,7 +29,7 @@
 
   - name: Task for Ubuntu
     block:
-    - name: Adding to report...check /tmp/summary.csv on spm5882-aap for results!
+    - name: Adding to report...check /tmp/summary.csv on 10.3.39.5 for results!
       lineinfile:
         path: /tmp/summary.csv
         line: "{{ ansible_fqdn }},{{ ansible_kernel_version }},{{ansible_distribution}},{{ansible_distribution_version}},{{ ansible_uptime_seconds }},{{ansible_date_time.date}}"
