@@ -17,8 +17,8 @@
         gather_timeout: 30
       register: system_info
 
-    - name: Get current date
-      ansible.builtin.command: date
+    - name: Get current date in DD/MM/YYYY format
+      ansible.builtin.command: date +"%d/%m/%Y"
       register: current_date
 
     - name: Get system uptime in minutes
