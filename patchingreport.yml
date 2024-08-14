@@ -1,6 +1,6 @@
 ---
 - name: Gather specific OS information and save to CSV
-  hosts: vtm
+  hosts: all
   become: yes
   gather_facts: no
 
