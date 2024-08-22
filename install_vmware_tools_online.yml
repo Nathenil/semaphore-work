@@ -1,6 +1,6 @@
 ---
 - name: Install VMware Tools from the Internet on Linux Servers
-  hosts: linux_servers
+  hosts: all
   become: yes
 
   tasks:
