@@ -1,0 +1,48 @@
+---
+- name: Install VMware Tools from the Internet on Linux Servers
+  hosts: linux_servers
+  become: yes
+
+  tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install open-vm-tools (Debian/Ubuntu)
+      apt:
+        name: open-vm-tools
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install open-vm-tools-desktop for GUI (Debian/Ubuntu)
+      apt:
+        name: open-vm-tools-desktop
+        state: present
+      when: ansible_os_family == "Debian" and ansible_env.SHLVL is defined
+
+    - name: Install open-vm-tools (RHEL/CentOS)
+      yum:
+        name: open-vm-tools
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install open-vm-tools-desktop for GUI (RHEL/CentOS)
+      yum:
+        name: open-vm-tools-desktop
+        state: present
+      when: ansible_os_family == "RedHat" and ansible_env.SHLVL is defined
+
+    - name: Ensure VMware Tools service is enabled and started (Debian/Ubuntu)
+      systemd:
+        name: open-vm-tools
+        enabled: yes
+        state: started
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure VMware Tools service is enabled and started (RHEL/CentOS)
+      systemd:
+        name: vmtoolsd
+        enabled: yes
+        state: started
+      when: ansible_os_family == "RedHat"
