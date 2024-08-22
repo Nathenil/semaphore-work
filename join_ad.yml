@@ -1,0 +1,69 @@
+---
+- name: Join VMs to Active Directory Domain
+  hosts: all
+  become: yes
+  vars:
+    ad_domain: "lexisnexis.co.za"
+    ad_admin_user: "akuettnx@legal.regn.net"
+    ad_admin_password: "L-x1-N-x1-"
+  
+  tasks:
+    - name: Install necessary packages (Debian/Ubuntu)
+      apt:
+        name:
+          - realmd
+          - sssd
+          - adcli
+          - krb5-user
+          - packagekit
+          - samba-common
+        state: present
+      when: ansible_os_family == "Debian"
+    
+    - name: Install necessary packages (Red Hat/CentOS)
+      yum:
+        name:
+          - realmd
+          - sssd
+          - adcli
+          - krb5-workstation
+          - packagekit
+          - samba-common
+        state: present
+      when: ansible_os_family == "RedHat"
+    
+    - name: Discover the AD domain
+      command: realm discover {{ ad_domain }}
+      register: realm_discover_result
+      ignore_errors: yes
+    
+    - name: Join the VM to the AD domain
+      command: echo {{ ad_admin_password }} | realm join --user={{ ad_admin_user }} {{ ad_domain }}
+      become: yes
+      when: realm_discover_result.rc == 0
+    
+    - name: Configure SSSD
+      copy:
+        content: |
+          [sssd]
+          domains = {{ ad_domain }}
+          config_file_version = 2
+          services = nss, pam
+        dest: /etc/sssd/sssd.conf
+        owner: root
+        group: root
+        mode: '0600'
+    
+    - name: Restart SSSD service
+      service:
+        name: sssd
+        state: restarted
+    
+    - name: Verify domain join
+      command: id {{ ad_admin_user }}
+      ignore_errors: yes
+    
+    - name: Debug message for domain join verification
+      debug:
+        msg: "VM has successfully joined the AD domain."
+      when: realm_discover_result.rc == 0 and not id_result.failed
