@@ -39,4 +39,3 @@
 
     - name: Run updates (for RedHat/CentOS)
       when: yum_updates_pending.results | length > 0
-      ...
