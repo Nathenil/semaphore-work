@@ -1,0 +1,22 @@
+---
+- name: Update Ubuntu and AlmaLinux systems
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Determine OS type
+      ansible.builtin.setup:
+        gather_subset: 'os_family'
+      register: os_info
+
+    - name: Update Ubuntu systems
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+      when: os_info.ansible_facts['os_family'] == "Debian"
+
+    - name: Update AlmaLinux systems
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+      when: os_info.ansible_facts['os_family'] == "RedHat"
