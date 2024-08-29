@@ -9,14 +9,18 @@
         gather_subset: 'os_family'
       register: os_info
 
-    - name: Update Ubuntu systems
+    - name: Debug OS family
+      ansible.builtin.debug:
+        msg: "OS family is {{ os_info.ansible_facts['ansible_os_family'] }}"
+
+    - name: Update Debian/Ubuntu systems
       ansible.builtin.apt:
         update_cache: yes
         upgrade: dist
-      when: os_info.ansible_facts['os_family'] == "Debian"
+      when: os_info.ansible_facts['ansible_os_family'] == "Debian"
 
-    - name: Update AlmaLinux systems
+    - name: Update RedHat/AlmaLinux systems
       ansible.builtin.yum:
         name: '*'
         state: latest
-      when: os_info.ansible_facts['os_family'] == "RedHat"
+      when: os_info.ansible_facts['ansible_os_family'] == "RedHat"
