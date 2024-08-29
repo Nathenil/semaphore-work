@@ -29,14 +29,14 @@
         upgrade: dist
       when: apt_updates_pending.stdout != ""
 
-    - name: Check if there are updates pending (for RedHat/CentOS)
-      ansible.builtin.shell: yum check-update | wc -l
-      when: ansible_facts['os_family'] == "RedHat"
+    - name: Check for updates
+      yum:
+      list: updates
       register: yum_updates_pending
-      changed_when: yum_updates_pending.stdout | int > 0
+
+    - debug:
+        var: yum_updates_pending
 
     - name: Run updates (for RedHat/CentOS)
-      ansible.builtin.yum:
-        name: '*'
-        state: latest
-      when: yum_updates_pending.stdout | int > 0
+      when: yum_updates_pending.results | length > 0
+      ...
