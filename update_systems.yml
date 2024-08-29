@@ -13,7 +13,7 @@
       ansible.builtin.apt:
         update_cache: yes
         upgrade: dist
-      when: os_info.ansible_facts['os_family'] == "Ubuntu"
+      when: os_info.ansible_facts['os_family'] == "Debian"
 
     - name: Update AlmaLinux systems
       ansible.builtin.yum:
