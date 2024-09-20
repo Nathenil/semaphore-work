@@ -1,6 +1,6 @@
 ---
 - name: Join VMs to Active Directory Domain
-  hosts: 10.10.0.17
+  hosts: 10.3.168.22
   become: yes
   vars:
     ad_domain: "legal.regn.net"
