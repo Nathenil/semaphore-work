@@ -1,11 +1,11 @@
 ---
 - name: Join VMs to Active Directory Domain
-  hosts: all
+  hosts: 10.10.0.17
   become: yes
   vars:
-    ad_domain: "lexisnexis.co.za"
-    ad_admin_user: "akuettnx@legal.regn.net"
-    ad_admin_password: "L-x1-N-x1-"
+    ad_domain: "legal.regn.net"
+    ad_admin_user: "svc-leglngcptidm"
+    ad_admin_password: "N@7ur@lN@7ur@lL3x15N3x15IDM"
   
   tasks:
     - name: Install necessary packages (Debian/Ubuntu)
