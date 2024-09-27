@@ -1,6 +1,6 @@
 ---
 - name: Copy and install SnowAgent on AlmaLinux 8 machines
-  hosts: 10.3.168.22
+  hosts: 10.3.168.20
   become: yes
   tasks:
     - name: Copy SnowAgent installation file to destination
