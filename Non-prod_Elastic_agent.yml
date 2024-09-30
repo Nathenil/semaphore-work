@@ -1,0 +1,21 @@
+---
+- name: Install Elastic Agent on Linux
+  hosts: Non-prod
+  become: yes
+  tasks:
+    - name: Copy Elastic Agent tarball to destination
+      ansible.builtin.copy:
+        src: "/home/nathaniela/elastic-agent-8.12.2-linux-x86_64.tar.gz"  # Replace with your local path
+        dest: "/tmp/elastic-agent-8.12.2-linux-x86_64.tar.gz"
+
+    - name: Extract Elastic Agent tarball
+      ansible.builtin.unarchive:
+        src: "/tmp/elastic-agent-8.12.2-linux-x86_64.tar.gz"
+        dest: "/tmp/"
+        remote_src: yes
+
+    - name: Install Elastic Agent
+      ansible.builtin.command:
+        cmd: "./elastic-agent install --url=https://elastic-fleet.lexisnexis.com:8220 --enrollment-token=dWJMcmlJb0JGV3Y5ak41cTRtQTI6MUVST3BtWnBRVDJlRVk5SUtiY2dXZw=="
+        chdir: "/tmp/elastic-agent-8.12.2-linux-x86_64"
+      become: yes
