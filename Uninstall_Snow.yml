@@ -1,0 +1,38 @@
+---
+- name: Uninstall snowagent on AlmaLinux and Ubuntu
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Determine the operating system
+      ansible.builtin.setup:
+        gather_subset:
+          - "os_family"
+
+    - name: Uninstall snowagent on AlmaLinux
+      ansible.builtin.yum:
+        name: snowagent
+        state: absent
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Uninstall snowagent on Ubuntu
+      ansible.builtin.apt:
+        name: snowagent
+        state: absent
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Remove snowagent configuration files if present
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/snow/snowagent.config
+        - /opt/snow/snowagent
+      ignore_errors: yes
+
+    - name: Remove snowagent service from systemd if it exists
+      ansible.builtin.systemd:
+        name: snowagent
+        state: stopped
+        enabled: no
+      ignore_errors: yes
