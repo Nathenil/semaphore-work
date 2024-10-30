@@ -16,11 +16,11 @@
 
     - name: Install Elastic Agent
       ansible.builtin.command:
-      chdir: "/tmp/elastic-agent-8.12.2-linux-x86_64"
         cmd: "./elastic-agent install --url=https://elastic-fleet.lexisnexis.com:8220 --enrollment-token=TnVjeUNZOEJOWW1vVUUxbjJuUlA6cE1OSXFRd0hRSVNKNWtpM2J5RW83dw=="
+        chdir: "/tmp/elastic-agent-8.12.2-linux-x86_64"
         become: yes
 
-    - name: Clean up Elastic A gent tarball
+    - name: Clean up Elastic Agent tarball
       ansible.builtin.file:
         path: "/tmp/elastic-agent-8.12.2-linux-x86_64.tar.gz"
         state: absent
