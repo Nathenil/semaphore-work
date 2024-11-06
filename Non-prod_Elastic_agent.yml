@@ -1,6 +1,6 @@
 ---
 - name: Install Elastic Agent on Linux
-  hosts: Non-prod
+  hosts: 10.3.163.51
   become: yes
   tasks:
     - name: Copy Elastic Agent tarball to destination
