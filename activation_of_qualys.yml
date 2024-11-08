@@ -1,46 +1,38 @@
 ---
-- name: Manage Qualys Cloud Agent Service
-  hosts: all
-  become: yes
+- name: Install and activate Qualys Agent on Ubuntu and AlmaLinux
+  hosts: target_server
+  become: true
+  vars:
+    # Define the source paths for the Qualys agent installer files on the Ansible control node
+    qualys_agent_rpm_src: "/home/nathaniela/QualysCloudAgent-4.rpm"  # Path to the RPM file for AlmaLinux
+    qualys_agent_deb_src: "/home/nathaniela/'QualysCloudAgent 1.deb'"  # Path to the DEB file for Ubuntu
+    qualys_activation_key: "c3e8aa6f-df51-41db-8150-8cd0b010c152"
+    qualys_customer_id: "564896bd-efd2-6cde-8182-82e5936636d1"
+    qualys_agent_service_name: "qualys-cloud-agent"
+
   tasks:
-    - name: Run qualys-cloud-agent.sh on AlmaLinux 8
-      ansible.builtin.command: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh ActivationId=c3e8aa6f-df51-41db-8150-8cd0b010c152 CustomerId=564896bd-efd2-6cde-8182-82e5936636d1
-      when: ansible_facts['os_family'] == "RedHat"
+    - name: Determine OS family
+      ansible.builtin.set_fact:
+        os_family: "{{ ansible_os_family }}"
 
-    - name: Run qualys-cloud-agent.sh on Ubuntu 22.04
-      ansible.builtin.command: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh ActivationId=c3e8aa6f-df51-41db-8150-8cd0b010c152 CustomerId=564896bd-efd2-6cde-8182-82e5936636d1
-      when: ansible_facts['os_family'] == "Debian"
+    - name: Set installer source and destination paths based on OS family
+      set_fact:
+        qualys_agent_src_path: "{{ qualys_agent_deb_src if os_family == 'Debian' else qualys_agent_rpm_src }}"
+        qualys_agent_dest_path: "/tmp/qualys-agent.{{ 'deb' if os_family == 'Debian' else 'rpm' }}"
 
-    - name: Stop Qualys Cloud Agent on AlmaLinux 8
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: stopped
-      when: ansible_facts['os_family'] == "RedHat"
+    - name: Copy the appropriate Qualys agent installation file to the destination server
+      ansible.builtin.copy:
+        src: "{{ qualys_agent_src_path }}"
+        dest: "{{ qualys_agent_dest_path }}"
+        mode: '0755'
 
-    - name: Stop Qualys Cloud Agent on Ubuntu 22.04
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: stopped
-      when: ansible_facts['os_family'] == "Debian"
+    - name: Install Qualys agent on Ubuntu
+      ansible.builtin.apt:
+        deb: "{{ qualys_agent_dest_path }}"
+      when: os_family == "Debian"
 
-    - name: Ensure Qualys Cloud Agent is stopped
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: stopped
-
-    - name: Start Qualys Cloud Agent on AlmaLinux 8
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: started
-      when: ansible_facts['os_family'] == "RedHat"
-
-    - name: Start Qualys Cloud Agent on Ubuntu 22.04
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: started
-      when: ansible_facts['os_family'] == "Debian"
-
-    - name: Ensure Qualys Cloud Agent is started
-      ansible.builtin.systemd:
-        name: qualys-cloud-agent
-        state: started
+    - name: Install Qualys agent on AlmaLinux
+      ansible.builtin.yum:
+        name: "{{ qualys_agent_dest_path }}"
+        state: present
+      when:
