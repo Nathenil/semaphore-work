@@ -1,6 +1,6 @@
 ---
 - name: Install and activate Qualys Agent on Ubuntu and AlmaLinux
-  hosts: target_server
+  hosts: all
   become: true
   vars:
     # Define the source paths for the Qualys agent installer files on the Ansible control node
