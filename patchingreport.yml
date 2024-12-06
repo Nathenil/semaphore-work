@@ -22,16 +22,18 @@
       ansible.builtin.command: awk '{print int($1)}' /proc/uptime
       register: system_uptime
 
-    - name: Create CSV header on Ansible server
-      ansible.builtin.copy:
-        dest: "/home/nathaniela/os_info.csv"
-        content: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes\n"
-      delegate_to: nathaniela
+    - name: Ensure the CSV file exists with a header on Ansible server
+      ansible.builtin.lineinfile:
+        path: /home/nathaniela/os_info.csv
+        line: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes"
+        create: yes
+        state: present
+      delegate_to: localhost
       run_once: true
 
     - name: Append OS information to CSV on Ansible server
       ansible.builtin.lineinfile:
-        path: "/home/nathaniela/os_info.csv"
+        path: /home/nathaniela/os_info.csv
         line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }},{{ current_date.stdout }},{{ (system_uptime.stdout | int / 60) | round(0) }}"
         create: yes
-      delegate_to: nathaniela
+      delegate_to: localhost
