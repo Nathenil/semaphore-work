@@ -1,5 +1,5 @@
 ---
-- name: Gather specific OS information and save to CSV on localhost
+- name: Gather specific OS information and save to CSV for multiple admin accounts
   hosts: all
   become: yes
   gather_facts: no
@@ -10,6 +10,9 @@
         gather_subset:
           - 'min'
           - 'kernel'
+          - 'kernel_version'
+          - 'distribution'
+          - 'distribution_version'
           - 'hardware'
         gather_timeout: 30
       register: system_info
@@ -22,27 +25,16 @@
       ansible.builtin.command: awk '{print int($1)}' /proc/uptime
       register: system_uptime
 
-    - name: Ensure the CSV file exists with a header on localhost
-      ansible.builtin.lineinfile:
-        path: /home/nathaniela/os_info.csv
-        line: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes"
-        create: yes
-        state: present
-      delegate_to: localhost
+    - name: Create CSV header
+      local_action:
+        module: copy
+        dest: /home/nathaniela/os_info.csv
+        content: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes\n"
       run_once: true
 
-    - name: Append OS information to CSV on localhost
-      ansible.builtin.lineinfile:
+    - name: Append OS information to CSV
+      local_action:
+        module: lineinfile
         path: /home/nathaniela/os_info.csv
-        line: |
-          {{ inventory_hostname }},
-          {{ system_info.ansible_facts['ansible_os_family'] }},
-          {{ system_info.ansible_facts['ansible_kernel'] }},
-          {{ system_info.ansible_facts['ansible_kernel_version'] }},
-          {{ system_info.ansible_facts['ansible_distribution'] }},
-          {{ system_info.ansible_facts['ansible_distribution_version'] }},
-          {{ system_info.ansible_facts['ansible_architecture'] }},
-          {{ current_date.stdout }},
-          {{ (system_uptime.stdout | int / 60) | round(0) }}
+        line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }},{{ current_date.stdout }},{{ (system_uptime.stdout | int / 60) | round(0) }}"
         create: yes
-      delegate_to: localhost
