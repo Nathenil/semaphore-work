@@ -24,7 +24,7 @@
 
     - name: Ensure the CSV file exists with a header on localhost
       ansible.builtin.lineinfile:
-        path: /root/os_info.csv
+        path: /home/nathaniela/os_info.csv
         line: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes"
         create: yes
         state: present
@@ -33,7 +33,7 @@
 
     - name: Append OS information to CSV on localhost
       ansible.builtin.lineinfile:
-        path: /root/os_info.csv
+        path: /home/nathaniela/os_info.csv
         line: |
           {{ inventory_hostname }},
           {{ system_info.ansible_facts['ansible_os_family'] }},
