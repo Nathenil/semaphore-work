@@ -1,0 +1,39 @@
+---
+- name: Gather specific OS information and display on screen
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Gather specific OS information
+      ansible.builtin.setup:
+        gather_subset:
+          - 'min'
+          - 'kernel'
+          - 'kernel_version'
+          - 'distribution'
+          - 'distribution_version'
+          - 'hardware'
+        gather_timeout: 30
+      register: system_info
+
+    - name: Get current date in DD/MM/YYYY format
+      ansible.builtin.command: date +"%d/%m/%Y"
+      register: current_date
+
+    - name: Get system uptime in minutes
+      ansible.builtin.command: awk '{print int($1)}' /proc/uptime
+      register: system_uptime
+
+    - name: Display gathered information
+      ansible.builtin.debug:
+        msg: >
+          Hostname: {{ inventory_hostname }}
+          OS Family: {{ system_info.ansible_facts['ansible_os_family'] }}
+          Kernel: {{ system_info.ansible_facts['ansible_kernel'] }}
+          Kernel Version: {{ system_info.ansible_facts['ansible_kernel_version'] }}
+          Distribution: {{ system_info.ansible_facts['ansible_distribution'] }}
+          Distribution Version: {{ system_info.ansible_facts['ansible_distribution_version'] }}
+          Architecture: {{ system_info.ansible_facts['ansible_architecture'] }}
+          Date: {{ current_date.stdout }}
+          Uptime (minutes): {{ (system_uptime.stdout | int / 60) | round(0) }}
