@@ -1,0 +1,25 @@
+---
+- hosts: [Non-prod]
+  become: true
+  tasks:
+    - block:
+        - name: Remove previous TCP configuration
+          lineinfile:
+            dest: /etc/rsyslog.conf
+            state: absent
+            regexp: '\*.\* action\(type="omfwd" target="f5-sentinel-syslog.lexisnexis.com" port="514" protocol="tcp"\)'
+
+        - name: Configure rsyslog to send logs to f5-sentinel-syslog.lexisnexis.com via UDP
+          lineinfile:
+            dest: /etc/rsyslog.conf
+            state: present
+            line: '*.* action(type="omfwd" target="f5-sentinel-syslog.lexisnexis.com" port="514" protocol="udp")'
+
+        - name: Restart rsyslog service
+          service:
+            name: rsyslog
+            state: restarted
+      when: >
+        ((ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS') 
+        and ansible_distribution_major_version|int >= 7) 
+        or ansible_distribution == 'Ubuntu'
