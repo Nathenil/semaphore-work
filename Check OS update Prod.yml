@@ -1,6 +1,6 @@
 ---
 - name: Check OS version and pending updates
-  hosts: all
+  hosts: Prod
   become: yes
   tasks:
     - name: Gather OS information
