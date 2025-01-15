@@ -1,0 +1,39 @@
+---
+- name: Check OS version and pending updates
+  hosts: Non-prod
+  become: yes
+  tasks:
+    - name: Gather OS information
+      ansible.builtin.setup:
+        gather_subset:
+          - 'hardware'
+          - 'network'
+          - 'virtual'
+          - 'facter'
+          - 'ohai'
+          - 'distribution'
+      register: system_info
+
+    - name: Print OS version
+      ansible.builtin.debug:
+        msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
+
+    - name: Check if there are updates pending (for Debian or Ubuntu)
+      ansible.builtin.shell: apt-get -s upgrade | grep "upgraded,"
+      when: ansible_facts['os_family'] == "Ubuntu"
+      register: apt_updates_pending
+
+    - name: Print pending updates (for Debian/Ubuntu)
+      ansible.builtin.debug:
+        msg: "Pending updates: {{ apt_updates_pending.stdout }}"
+      when: ansible_facts['os_family'] == "Ubuntu"
+
+    - name: Check if there are updates pending (for RedHat/CentOS)
+      ansible.builtin.shell: yum check-update | wc -l
+      when: ansible_facts['os_family'] == "RedHat"
+      register: yum_updates_pending
+
+    - name: Print pending updates (for RedHat/CentOS)
+      ansible.builtin.debug:
+        msg: "Pending updates: {{ yum_updates_pending.stdout }}"
+      when: ansible_facts['os_family'] == "RedHat"
