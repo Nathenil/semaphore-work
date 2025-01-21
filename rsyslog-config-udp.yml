@@ -1,6 +1,8 @@
 ---
 - hosts: [Non-prod]
   become: true
+  vars:
+    ansible_python_interpreter=/root/my_venv/bin/python
   tasks:
     - block:
         - name: Remove previous TCP configuration
