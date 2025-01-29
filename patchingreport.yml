@@ -2,9 +2,6 @@
 - name: Gather specific OS information and save to CSV for multiple admin accounts
   hosts: all
   become: yes
-  become_method: sudo
-  become_user: nathaniela
-  ansible_became_password: "{{ L1nux@Chang3 }}"
   gather_facts: no
 
   tasks:
