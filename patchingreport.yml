@@ -2,10 +2,6 @@
 - name: Gather specific OS information and save to CSV for multiple admin accounts
   hosts: all
   become: yes
-  become_method: sudo
-  become_user: root
-  ansible_ssh_user: nathaniela
-  command: cat /home/nathaniela/os_info.csv
   gather_facts: no
 
   tasks:
