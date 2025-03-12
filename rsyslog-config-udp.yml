@@ -1,5 +1,5 @@
 ---
-- hosts: [Non-prod]
+- hosts: all
   become: true
   tasks:
     - block:
