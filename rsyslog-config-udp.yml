@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: 10.3.168.167
   become: true
   tasks:
     - block:
