@@ -3,8 +3,8 @@
   hosts: all
   become: yes
   vars:
-    script_src: "/home/nathaniela/add_user 1.sh"
-    script_dest: "/tmp/add_user_1.sh"  # no space in dest for easier handling
+    script_src: "/home/nathaniela/add_user_servicenow.sh"
+    script_dest: "/tmp/add_user_servicenow.sh"  # no space in dest for easier handling
 
   tasks:
     - name: Copy the script to remote host
