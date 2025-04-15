@@ -28,13 +28,13 @@
     - name: Create CSV header
       local_action:
         module: copy
-        dest: /opt/semaphore/reports/os_info.csv
+        dest: /home/semaphore/os_info.csv
         content: "hostname,os_family,kernel,kernel_version,distribution,distribution_version,architecture,date,uptime_minutes\n"
       run_once: true
 
     - name: Append OS information to CSV
       local_action:
         module: lineinfile
-        path: /opt/semaphore/reports/os_info.csv
+        path: /home/semaphore/os_info.csv
         line: "{{ inventory_hostname }},{{ system_info.ansible_facts['ansible_os_family'] }},{{ system_info.ansible_facts['ansible_kernel'] }},{{ system_info.ansible_facts['ansible_kernel_version'] }},{{ system_info.ansible_facts['ansible_distribution'] }},{{ system_info.ansible_facts['ansible_distribution_version'] }},{{ system_info.ansible_facts['ansible_architecture'] }},{{ current_date.stdout }},{{ (system_uptime.stdout | int / 60) | round(0) }}"
         create: yes
