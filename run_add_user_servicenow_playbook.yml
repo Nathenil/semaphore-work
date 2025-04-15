@@ -1,5 +1,5 @@
 ---
-- name: Copy and run the add_user script on all hosts
+- name: Copy and execute a script on all remote hosts
   hosts: all
   become: yes
   vars:
@@ -7,12 +7,24 @@
     script_dest: "/tmp/add_user_servicenow.sh"
 
   tasks:
-    - name: Copy the script to remote host
+    - name: Copy script from Ansible control node to remote host
       copy:
         src: "{{ script_src }}"
         dest: "{{ script_dest }}"
         mode: '0755'
-        register: copy_result
+      delegate_to: localhost
+      run_once: true  # copy only once if using multiple hosts
 
-    - name: Run the script on remote host
-      command: bash "{{ script_dest }}"
+    - name: Copy from delegate machine to target host
+      fetch:
+        src: "{{ script_dest }}"
+        dest: "/tmp/add_user_servicenow.sh"
+        flat: yes
+
+    - name: Set execute permission (in case fetch didn't preserve)
+      file:
+        path: "/tmp/add_user_servicenow.sh"
+        mode: '0755'
+
+    - name: Run the script
+      command: "/bin/bash /tmp/add_user_servicenow.sh"
