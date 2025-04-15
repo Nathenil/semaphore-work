@@ -12,6 +12,7 @@
         src: "{{ script_src }}"
         dest: "{{ script_dest }}"
         mode: '0755'
+        register: copy_result
 
     - name: Run the script on remote host
       command: bash "{{ script_dest }}"
