@@ -1,5 +1,5 @@
 ---
-- name: Copy and run the add_user_servicenow script on all hosts
+- name: Copy and run the add_user script on all hosts
   hosts: all
   become: yes
   vars:
@@ -7,18 +7,6 @@
     script_dest: "/tmp/add_user_servicenow.sh"
 
   tasks:
-    - name: Ensure the source script exists on control node
-      stat:
-        path: "{{ script_src }}"
-      register: script_stat
-      delegate_to: localhost
-
-    - name: Fail if script doesn't exist
-      fail:
-        msg: "Script {{ script_src }} does not exist on the control node!"
-      when: not script_stat.stat.exists
-      delegate_to: localhost
-
     - name: Copy the script to remote host
       copy:
         src: "{{ script_src }}"
