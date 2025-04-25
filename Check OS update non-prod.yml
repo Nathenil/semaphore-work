@@ -18,22 +18,36 @@
       ansible.builtin.debug:
         msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
 
-    - name: Check if there are updates pending (for Debian or Ubuntu)
-      ansible.builtin.shell: apt-get -s upgrade | grep "upgraded,"
-      when: ansible_facts['os_family'] == "Ubuntu"
-      register: apt_updates_pending
+    # --- Debian/Ubuntu Section ---
+    - name: Get list of upgradable packages (Debian/Ubuntu)
+      ansible.builtin.shell: apt list --upgradable 2>/dev/null | grep -v 'Listing...'
+      when: ansible_facts['os_family'] == "Debian"
+      register: apt_upgrades
+      ignore_errors: true
 
-    - name: Print pending updates (for Debian/Ubuntu)
+    - name: Show list of upgradable packages (Debian/Ubuntu)
       ansible.builtin.debug:
-        msg: "Pending updates: {{ apt_updates_pending.stdout }}"
-      when: ansible_facts['os_family'] == "Ubuntu"
+        msg: "{{ apt_upgrades.stdout_lines }}"
+      when: ansible_facts['os_family'] == "Debian"
 
-    - name: Check if there are updates pending (for RedHat/CentOS)
-      ansible.builtin.shell: yum check-update | wc -l
+    - name: Count upgradable packages (Debian/Ubuntu)
+      ansible.builtin.debug:
+        msg: "Total pending updates: {{ apt_upgrades.stdout_lines | length }}"
+      when: ansible_facts['os_family'] == "Debian"
+
+    # --- RedHat/CentOS/AlmaLinux Section ---
+    - name: Get list of upgradable packages (RedHat/CentOS/AlmaLinux)
+      ansible.builtin.shell: dnf check-update || true
       when: ansible_facts['os_family'] == "RedHat"
-      register: yum_updates_pending
+      register: dnf_upgrades
+      ignore_errors: true
 
-    - name: Print pending updates (for RedHat/CentOS)
+    - name: Show list of upgradable packages (RedHat/CentOS/AlmaLinux)
       ansible.builtin.debug:
-        msg: "Pending updates: {{ yum_updates_pending.stdout }}"
+        msg: "{{ dnf_upgrades.stdout_lines }}"
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Count upgradable packages (RedHat/CentOS/AlmaLinux)
+      ansible.builtin.debug:
+        msg: "Total pending updates: {{ dnf_upgrades.stdout_lines | select('match', '^[a-zA-Z0-9]') | list | length }}"
       when: ansible_facts['os_family'] == "RedHat"
