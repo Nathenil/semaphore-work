@@ -1,6 +1,6 @@
 ---
 - name: Check OS version and manage updates with summary
-  hosts: 10.3.169.197
+  hosts: all
   become: yes
   vars:
     update_log_file: /tmp/ansible-yum-update-log.txt
