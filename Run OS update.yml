@@ -1,31 +1,69 @@
 ---
-- name: Check OS version and manage updates
+- name: Check OS version and manage updates with summary
   hosts: alma
   become: yes
+  vars:
+    update_log_file: /tmp/ansible-yum-update-log.txt
+
   tasks:
+
     - name: Gather OS information
       ansible.builtin.setup:
         gather_subset:
-          - 'hardware'
-          - 'network'
-          - 'virtual'
-          - 'facter'
-          - 'ohai'
-          - 'distribution'
+          - hardware
+          - network
+          - virtual
+          - facter
+          - ohai
+          - distribution
       register: system_info
 
     - name: Print OS version
       ansible.builtin.debug:
         msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
 
-    - name: Check if there are updates pending (for RedHat/CentOS)
-      ansible.builtin.shell: yum check-update | wc -l
-      when: ansible_facts['os_family'] == "RedHat"
-      register: yum_updates_pending
-      changed_when: yum_updates_pending.stdout | int > 0
+    - name: Check for available updates
+      ansible.builtin.command: yum check-update
+      register: yum_updates_check
+      changed_when: false
+      failed_when: false
 
-    - name: Run updates (for RedHat/CentOS)
-      ansible.builtin.yum:
-        name: '*'
-        state: latest
+    - name: Count available updates
+      ansible.builtin.shell: yum check-update | grep -Ev '^(Loaded|Security:)' | wc -l
+      register: yum_updates_pending
+      changed_when: false
+      when: yum_updates_check.rc in [0, 100]
+
+    - name: Show number of updates
+      ansible.builtin.debug:
+        msg: "Number of available updates: {{ yum_updates_pending.stdout }}"
+      when: yum_updates_check.rc in [0, 100]
+
+    - name: Backup current list of packages
+      ansible.builtin.shell: rpm -qa --last > /tmp/packages-before.txt
+      when: yum_updates_pending.stdout | int > 0
+
+    - name: Run updates and log changes
+      ansible.builtin.shell: |
+        yum -y update | tee {{ update_log_file }}
+      register: update_output
+      changed_when: "'Updated:' in update_output.stdout"
+      when: yum_updates_pending.stdout | int > 0
+
+    - name: Get new package list
+      ansible.builtin.shell: rpm -qa --last > /tmp/packages-after.txt
+      when: yum_updates_pending.stdout | int > 0
+
+    - name: Generate package update summary
+      ansible.builtin.shell: |
+        comm -13 <(sort /tmp/packages-before.txt) <(sort /tmp/packages-after.txt)
+      register: updated_packages
+      changed_when: false
+      when: yum_updates_pending.stdout | int > 0
+
+    - name: Show updated packages summary
+      ansible.builtin.debug:
+        msg: |
+          Update Summary:
+          {{ updated_packages.stdout_lines | join('\n') if updated_packages.stdout_lines else 'No packages updated.' }}
       when: yum_updates_pending.stdout | int > 0
