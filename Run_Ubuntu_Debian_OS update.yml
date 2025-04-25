@@ -1,0 +1,65 @@
+---
+- name: Check OS version and manage updates with summary on Ubuntu/Debian
+  hosts: all
+  become: yes
+  vars:
+    update_log_file: /tmp/ansible-apt-update-log.txt
+
+  tasks:
+
+    - name: Gather OS information
+      ansible.builtin.setup:
+        gather_subset:
+          - hardware
+          - network
+          - virtual
+          - facter
+          - ohai
+          - distribution
+      register: system_info
+
+    - name: Print OS version
+      ansible.builtin.debug:
+        msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
+
+    - name: Update APT cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Check for upgradable packages
+      ansible.builtin.shell: apt list --upgradable 2>/dev/null | tail -n +2 | wc -l
+      register: apt_updates_pending
+      changed_when: false
+
+    - name: Show number of updates
+      ansible.builtin.debug:
+        msg: "Number of available updates: {{ apt_updates_pending.stdout }}"
+
+    - name: Backup current list of packages
+      ansible.builtin.shell: dpkg -l | awk '/^ii/ {print $2" "$3}' | sort > /tmp/packages-before.txt
+      when: apt_updates_pending.stdout | int > 0
+
+    - name: Run updates and log output
+      ansible.builtin.shell: |
+        apt-get -y upgrade | tee {{ update_log_file }}
+      register: update_output
+      changed_when: "'upgraded,' in update_output.stdout"
+      when: apt_updates_pending.stdout | int > 0
+
+    - name: Get new package list
+      ansible.builtin.shell: dpkg -l | awk '/^ii/ {print $2" "$3}' | sort > /tmp/packages-after.txt
+      when: apt_updates_pending.stdout | int > 0
+
+    - name: Generate package update summary
+      ansible.builtin.shell: comm -13 /tmp/packages-before.txt /tmp/packages-after.txt
+      register: updated_packages
+      changed_when: false
+      when: apt_updates_pending.stdout | int > 0
+
+    - name: Show updated packages summary
+      ansible.builtin.debug:
+        msg: |
+          Update Summary:
+          {{ updated_packages.stdout_lines | join('\n') if updated_packages.stdout_lines else 'No packages updated.' }}
+      when: apt_updates_pending.stdout | int > 0
