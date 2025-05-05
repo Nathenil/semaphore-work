@@ -1,6 +1,6 @@
 ---
 - name: Check OS version and manage updates with summary on Ubuntu/Debian
-  hosts: all
+  hosts: debian
   become: yes
   vars:
     update_log_file: /tmp/ansible-apt-update-log.txt
