@@ -1,6 +1,6 @@
 ---
 - name: Copy and run the add_user script on all hosts
-  hosts: 10.3.33.51
+  hosts: all
   become: yes
   vars:
     script_src: "/opt/semaphore/scripts/add_user_servicenow.sh"
