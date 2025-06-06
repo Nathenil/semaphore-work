@@ -22,6 +22,13 @@
       ansible.builtin.debug:
         msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
 
+    - name: Check if OS is supported
+      ansible.builtin.assert:
+        that:
+          - system_info.ansible_facts['ansible_distribution'] in ['AlmaLinux', 'CentOS']
+          - system_info.ansible_facts['ansible_distribution_major_version'] in ['7', '8', '9']
+        fail_msg: "Unsupported OS. This playbook supports AlmaLinux or CentOS 7/8/9 only."
+
     - name: Check for available updates
       ansible.builtin.command: yum check-update
       register: yum_updates_check
@@ -55,8 +62,10 @@
       when: yum_updates_pending.stdout | int > 0
 
     - name: Generate package update summary
-      ansible.builtin.shell: |
-        comm -13 <(sort /tmp/packages-before.txt) <(sort /tmp/packages-after.txt)
+      ansible.builtin.shell: >
+        bash -c 'comm -13 <(sort /tmp/packages-before.txt) <(sort /tmp/packages-after.txt)'
+      args:
+        executable: /bin/bash
       register: updated_packages
       changed_when: false
       when: yum_updates_pending.stdout | int > 0
@@ -66,4 +75,10 @@
         msg: |
           Update Summary:
           {{ updated_packages.stdout_lines | join('\n') if updated_packages.stdout_lines else 'No packages updated.' }}
+      when: yum_updates_pending.stdout | int > 0
+
+    - name: Reboot if updates were applied
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+        test_command: whoami
       when: yum_updates_pending.stdout | int > 0
