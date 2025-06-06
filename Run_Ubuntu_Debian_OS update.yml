@@ -22,7 +22,7 @@
       ansible.builtin.debug:
         msg: "OS Version: {{ system_info.ansible_facts['ansible_distribution'] }} {{ system_info.ansible_facts['ansible_distribution_version'] }}"
 
-    - name: Update APT cache
+    - name: Ensure APT cache is updated
       ansible.builtin.apt:
         update_cache: yes
         cache_valid_time: 3600
@@ -44,7 +44,7 @@
       ansible.builtin.shell: |
         apt-get -y upgrade | tee {{ update_log_file }}
       register: update_output
-      changed_when: "'upgraded,' in update_output.stdout"
+      changed_when: "'upgraded,' in update_output.stdout or 'newly installed,' in update_output.stdout"
       when: apt_updates_pending.stdout | int > 0
 
     - name: Get new package list
@@ -62,4 +62,10 @@
         msg: |
           Update Summary:
           {{ updated_packages.stdout_lines | join('\n') if updated_packages.stdout_lines else 'No packages updated.' }}
+      when: apt_updates_pending.stdout | int > 0
+
+    - name: Reboot if updates were applied
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+        test_command: whoami
       when: apt_updates_pending.stdout | int > 0
