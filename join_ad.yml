@@ -2,10 +2,7 @@
 - name: Join VMs to Active Directory Domain
   hosts: 10.3.168.22
   become: yes
-  vars:
-    ad_domain: "legal.regn.net"
-    ad_admin_user: "svc-leglngcptidm"
-    ad_admin_password: "N@7ur@lN@7ur@lL3x15N3x15IDM"
+  
   
   tasks:
     - name: Install necessary packages (Debian/Ubuntu)
