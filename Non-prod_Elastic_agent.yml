@@ -5,7 +5,7 @@
   tasks:
     - name: Copy Elastic Agent tarball to destination
       ansible.builtin.copy:
-        src: "/home/nathaniela/elastic-agent-8.12.2-linux-x86_64.tar.gz"  # Replace with your local path
+        src: "/home/semaphore/elastic-agent-8.12.2-linux-x86_64.tar.gz"  # Replace with your local path
         dest: "/tmp/elastic-agent-8.12.2-linux-x86_64.tar.gz"
 
     - name: Extract Elastic Agent tarball
