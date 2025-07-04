@@ -1,0 +1,47 @@
+---
+- name: Check and Ensure Elastic and Qualys Agents are Running
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    services_to_check:
+      - elastic-agent
+      - qualys-cloud-agent
+
+  tasks:
+
+    - name: Check if {{ item }} service unit file exists
+      stat:
+        path: "/etc/systemd/system/{{ item }}.service"
+      register: service_unit_files
+      loop: "{{ services_to_check }}"
+      tags: check_services
+
+    - name: Set list of available services
+      set_fact:
+        available_services: "{{ service_unit_files.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | list }}"
+      tags: check_services
+
+    - name: Start and enable available services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop: "{{ available_services }}"
+      register: service_start_results
+      tags: check_services
+
+    - name: Report services that were started or already running
+      debug:
+        msg: "{{ item.name }} was started or is already running."
+      loop: "{{ service_start_results.results }}"
+      when: item is defined
+      tags: check_services
+
+    - name: Report services that are NOT installed
+      debug:
+        msg: "{{ item.item }} is NOT installed on this host."
+      when: not item.stat.exists
+      loop: "{{ service_unit_files.results }}"
+      tags: check_services
