@@ -4,8 +4,8 @@
   become: true
   vars:
     # Define the source paths for the Qualys agent installer files on the Ansible control node
-    qualys_agent_rpm_src: "/home/nathaniela/QualysCloudAgent-4.rpm"  # Path to the RPM file for AlmaLinux
-    qualys_agent_deb_src: "/home/nathaniela/'QualysCloudAgent 1.deb'"  # Path to the DEB file for Ubuntu
+    qualys_agent_rpm_src: "/home/semaphore/QualysCloudAgent-4.rpm"  # Path to the RPM file for AlmaLinux
+    qualys_agent_deb_src: "/home/semaphore/'QualysCloudAgent 1.deb'"  # Path to the DEB file for Ubuntu
     qualys_activation_key: "c3e8aa6f-df51-41db-8150-8cd0b010c152"
     qualys_customer_id: "564896bd-efd2-6cde-8182-82e5936636d1"
     qualys_agent_service_name: "qualys-cloud-agent"
