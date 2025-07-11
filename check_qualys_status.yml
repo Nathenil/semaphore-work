@@ -1,0 +1,38 @@
+---
+- name: Check Qualys Cloud Agent activation status
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Check if Qualys agent binary exists
+      stat:
+        path: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent
+      register: qualys_binary
+
+    - name: Fail if Qualys agent is not installed
+      fail:
+        msg: "Qualys Cloud Agent is not installed on this host."
+      when: not qualys_binary.stat.exists
+
+    - name: Check if Qualys agent service is running
+      ansible.builtin.service_facts:
+
+    - name: Set Qualys service name based on platform
+      set_fact:
+        qualys_service: "qualys-cloud-agent"
+
+    - name: Fail if Qualys service is not running
+      fail:
+        msg: "Qualys Cloud Agent service is not running."
+      when: >
+        (ansible_facts.services[qualys_service] is not defined) or
+        (ansible_facts.services[qualys_service].state != "running")
+
+    - name: Check Qualys log for activation success
+      shell: "grep -i 'activation.*success' /var/log/qualys/qualys-cloud-agent.log || true"
+      register: activation_log
+
+    - name: Display activation status
+      debug:
+        msg: >
+          Activation found: {{ 'Yes' if activation_log.stdout else 'No - Check log for issues' }}
