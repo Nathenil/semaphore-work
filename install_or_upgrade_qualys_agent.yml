@@ -1,11 +1,11 @@
 ---
-- name: Install and activate Qualys Agent on Ubuntu and AlmaLinux
+- name: Install or upgrade Qualys Agent on Ubuntu and AlmaLinux
   hosts: all
   become: true
   vars:
     qualys_agent_rpm_src: "/home/semaphore/QualysCloudAgent-6.rpm"
     qualys_agent_deb_src: "/home/semaphore/QualysCloudAgent_1.deb"
-    
+
     qualys_activation_key: "f749af44-8c55-4f52-8a7b-a8583aec5bde"
     qualys_customer_id: "564896bd-efd2-6cde-8182-82e5936636d1"
     qualys_server_uri: "https://qagpublic.qg2.apps.qualys.com/CloudAgent/"
@@ -13,33 +13,67 @@
 
   tasks:
     - name: Determine OS family
-      ansible.builtin.set_fact:
+      set_fact:
         os_family: "{{ ansible_os_family }}"
 
-    - name: Set installer source and destination paths based on OS family
+    - name: Check if Qualys agent is already installed
+      shell: rpm -q qualys-cloud-agent || dpkg -s qualys-cloud-agent
+      register: qualys_installed
+      ignore_errors: true
+
+    - name: Stop and remove old Qualys agent on RHEL/AlmaLinux
+      block:
+        - name: Stop Qualys agent service
+          ansible.builtin.systemd:
+            name: "{{ qualys_agent_service_name }}"
+            state: stopped
+          ignore_errors: yes
+
+        - name: Remove Qualys agent RPM
+          ansible.builtin.yum:
+            name: qualys-cloud-agent
+            state: absent
+      when: os_family == "RedHat" and qualys_installed.rc == 0
+
+    - name: Stop and remove old Qualys agent on Ubuntu/Debian
+      block:
+        - name: Stop Qualys agent service
+          ansible.builtin.systemd:
+            name: "{{ qualys_agent_service_name }}"
+            state: stopped
+          ignore_errors: yes
+
+        - name: Remove Qualys agent DEB
+          ansible.builtin.apt:
+            name: qualys-cloud-agent
+            state: absent
+            purge: yes
+      when: os_family == "Debian" and qualys_installed.rc == 0
+
+    - name: Set installer source and destination paths
       set_fact:
         qualys_agent_src_path: "{{ qualys_agent_deb_src if os_family == 'Debian' else qualys_agent_rpm_src }}"
         qualys_agent_dest_path: "/tmp/qualys-agent.{{ 'deb' if os_family == 'Debian' else 'rpm' }}"
 
-    - name: Copy the appropriate Qualys agent installation file to the destination server
-      ansible.builtin.copy:
+    - name: Copy Qualys agent installation file
+      copy:
         src: "{{ qualys_agent_src_path }}"
         dest: "{{ qualys_agent_dest_path }}"
         mode: '0755'
 
     - name: Install Qualys agent on Ubuntu
-      ansible.builtin.apt:
+      apt:
         deb: "{{ qualys_agent_dest_path }}"
       when: os_family == "Debian"
 
     - name: Install Qualys agent on AlmaLinux
-      ansible.builtin.yum:
+      yum:
         name: "{{ qualys_agent_dest_path }}"
         state: present
       when: os_family == "RedHat"
 
     - name: Activate Qualys agent
-      ansible.builtin.command: >
+      command: >
         /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh
         ActivationId={{ qualys_activation_key }}
         CustomerId={{ qualys_customer_id }}
@@ -48,36 +82,36 @@
         creates: "/etc/qualys/cloud-agent.conf"
 
     - name: Enable and start Qualys Cloud Agent service
-      ansible.builtin.systemd:
+      systemd:
         name: "{{ qualys_agent_service_name }}"
         enabled: true
         state: started
 
-    - name: Wait for the agent log file to appear
+    - name: Wait for Qualys agent log
       wait_for:
         path: /var/log/qualys/qualys-cloud-agent.log
         timeout: 30
 
-    - name: Check Qualys agent log for activation success
+    - name: Check activation success in logs
       shell: grep -i "activation.*success" /var/log/qualys/qualys-cloud-agent.log || true
       register: qualys_activation_log
       changed_when: false
 
-    - name: Display activation log result
+    - name: Show activation result
       debug:
         msg: >
           Qualys activation result: {{
             '✅ Activation successful!' if qualys_activation_log.stdout else '❌ Activation not confirmed in log. Check the log manually.'
           }}
 
-    - name: Confirm Qualys Cloud Agent service is active
-      ansible.builtin.systemd:
+    - name: Confirm Qualys Cloud Agent service is running
+      systemd:
         name: "{{ qualys_agent_service_name }}"
         state: started
         enabled: true
       register: service_status
 
-    - name: Display service status
+    - name: Show service status
       debug:
         msg: >
           Service Status: {{
