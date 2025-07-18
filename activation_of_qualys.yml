@@ -48,3 +48,38 @@
         creates: "/etc/qualys/cloud-agent.conf"
 
     - name: Enable and start Qualys Cloud Agent service
+      ansible.builtin.systemd:
+        name: "{{ qualys_agent_service_name }}"
+        enabled: true
+        state: started
+
+    - name: Wait for the agent log file to appear
+      wait_for:
+        path: /var/log/qualys/qualys-cloud-agent.log
+        timeout: 30
+
+    - name: Check Qualys agent log for activation success
+      shell: grep -i "activation.*success" /var/log/qualys/qualys-cloud-agent.log || true
+      register: qualys_activation_log
+      changed_when: false
+
+    - name: Display activation log result
+      debug:
+        msg: >
+          Qualys activation result: {{
+            '✅ Activation successful!' if qualys_activation_log.stdout else '❌ Activation not confirmed in log. Check the log manually.'
+          }}
+
+    - name: Confirm Qualys Cloud Agent service is active
+      ansible.builtin.systemd:
+        name: "{{ qualys_agent_service_name }}"
+        state: started
+        enabled: true
+      register: service_status
+
+    - name: Display service status
+      debug:
+        msg: >
+          Service Status: {{
+            '✅ Running' if service_status.status.ActiveState == 'active' else '❌ Not running. Please check the service manually.'
+          }}
