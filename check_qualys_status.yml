@@ -43,7 +43,7 @@
       when: qualys_active_service is not defined
 
     - name: Check Qualys log for activation success
-      shell: "grep -i 'activation.*success' /var/log/qualys/qualys-cloud-agent.log || true"
+      shell: "grep -i 'Received HTTP response code: 200' /var/log/qualys/qualys-cloud-agent.log || true"
       register: activation_log
 
     - name: Display activation status
