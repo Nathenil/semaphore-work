@@ -4,29 +4,43 @@
   become: yes
   tasks:
 
-    - name: Check if Qualys agent binary exists
+    - name: Check if Qualys agent binary exists (default path)
+      stat:
+        path: /opt/qualys/cloud-agent/bin/qualys-cloud-agent
+      register: qualys_binary_opt
+
+    - name: Check if Qualys agent binary exists (alternative path)
       stat:
         path: /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent
-      register: qualys_binary
+      register: qualys_binary_usr
 
     - name: Fail if Qualys agent is not installed
       fail:
-        msg: "Qualys Cloud Agent is not installed on this host."
-      when: not qualys_binary.stat.exists
+        msg: "❌ Qualys Cloud Agent is not installed on this host."
+      when: not (qualys_binary_opt.stat.exists or qualys_binary_usr.stat.exists)
 
-    - name: Check if Qualys agent service is running
+    - name: Gather service facts
       ansible.builtin.service_facts:
 
-    - name: Set Qualys service name based on platform
+    - name: Define possible Qualys service names
       set_fact:
-        qualys_service: "qualys-cloud-agent"
+        qualys_service_names:
+          - qualys-cloud-agent
+          - qualys-cloud-agent.service
+
+    - name: Find active Qualys service
+      set_fact:
+        qualys_active_service: "{{ item }}"
+      loop: "{{ qualys_service_names }}"
+      when: item in ansible_facts.services and ansible_facts.services[item].state == 'running'
+      register: qualys_service_check
+      until: qualys_service_check is succeeded
+      ignore_errors: true
 
     - name: Fail if Qualys service is not running
       fail:
-        msg: "Qualys Cloud Agent service is not running."
-      when: >
-        (ansible_facts.services[qualys_service] is not defined) or
-        (ansible_facts.services[qualys_service].state != "running")
+        msg: "❌ Qualys Cloud Agent service is not running."
+      when: qualys_active_service is not defined
 
     - name: Check Qualys log for activation success
       shell: "grep -i 'activation.*success' /var/log/qualys/qualys-cloud-agent.log || true"
@@ -35,4 +49,4 @@
     - name: Display activation status
       debug:
         msg: >
-          Activation found: {{ 'Yes' if activation_log.stdout else 'No - Check log for issues' }}
+          ✅ Activation found: {{ 'Yes' if activation_log.stdout else 'No - Check log manually' }}
